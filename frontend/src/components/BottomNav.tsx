@@ -19,7 +19,7 @@ export default function BottomNav({ current, onChange, isWalking }: Props) {
     /* Floating island — centred above bottom edge */
     <div
       className="bottom-nav-shell"
-      style={{ zIndex: 1000 }}
+      style={{ zIndex: 1200 }}
     >
       <nav
         className="bottom-nav"
