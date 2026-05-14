@@ -1,5 +1,6 @@
-import { Info, BookOpen, Globe } from 'lucide-react';
+import { Info, BookOpen, Globe, LogOut } from 'lucide-react';
 import type { Settings } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface Props { settings: Settings; onChange: (s: Settings) => void; }
 
@@ -14,57 +15,52 @@ const AQI_BANDS = [
 
 export default function SettingsPanel({ settings, onChange }: Props) {
   return (
-    <div style={{ padding: '16px 16px 100px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: '0 0 4px' }}>Settings</h2>
-        <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Display preferences and reference.</p>
+    <div className="screen-shell">
+      <div className="screen-titlebar">
+        <div>
+          <h2>Settings</h2>
+          <p>Display preferences and air-quality reference.</p>
+        </div>
       </div>
 
       {/* AQI unit */}
-      <div className="glass" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-2)', marginBottom: 12, fontSize: 13, fontWeight: 500 }}>
+      <div className="map-panel settings-card">
+        <div className="panel-title">
           <Globe size={14} color="var(--teal)" />
           AQI Scale
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="settings-segment">
           {(['us', 'eu'] as const).map(unit => {
             const sel = settings.aqiUnit === unit;
             return (
               <button key={unit} onClick={() => onChange({ ...settings, aqiUnit: unit })}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 500,
-                  cursor: 'pointer', transition: 'all 0.18s',
-                  background: sel ? 'rgba(20,184,166,0.15)' : 'rgba(4,15,30,0.6)',
-                  border: `1px solid ${sel ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.06)'}`,
-                  color: sel ? 'var(--teal-bright)' : 'var(--text-3)',
-                  boxShadow: sel ? '0 0 16px rgba(20,184,166,0.1)' : 'none',
-                }}>
+                className={`scale-press ${sel ? 'settings-segment__button settings-segment__button--active' : 'settings-segment__button'}`}>
                 {unit === 'us' ? '🇺🇸 US EPA' : '🇪🇺 EU AQI'}
               </button>
             );
           })}
         </div>
-        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>
+        <p className="settings-card__copy">
           Both calculated from PM2.5 via Open-Meteo model data.
         </p>
       </div>
 
       {/* AQI legend */}
-      <div className="glass" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-2)', marginBottom: 14, fontSize: 13, fontWeight: 500 }}>
+      <div className="map-panel settings-card">
+        <div className="panel-title">
           <BookOpen size={14} color="var(--teal)" />
           AQI Reference Guide
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="aqi-reference">
           {AQI_BANDS.map(({ range, label, sub, color }) => (
-            <div key={range} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 3, boxShadow: `0 0 6px ${color}66` }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 13, color: 'var(--text-1)', fontWeight: 500 }}>{label}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'JetBrains Mono, monospace' }}>{range}</span>
+            <div key={range} className="aqi-reference__row">
+              <div className="aqi-reference__dot" style={{ background: color, boxShadow: `0 0 7px ${color}66` }} />
+              <div>
+                <div className="aqi-reference__topline">
+                  <span>{label}</span>
+                  <span className="mono">{range}</span>
                 </div>
-                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{sub}</p>
+                <p>{sub}</p>
               </div>
             </div>
           ))}
@@ -72,22 +68,29 @@ export default function SettingsPanel({ settings, onChange }: Props) {
       </div>
 
       {/* About */}
-      <div className="glass" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-2)', marginBottom: 10, fontSize: 13, fontWeight: 500 }}>
+      <div className="map-panel settings-card">
+        <div className="panel-title">
           <Info size={14} color="var(--teal)" />
           About UrbanBreath
         </div>
-        <p style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.7 }}>
+        <p className="settings-card__copy settings-card__copy--body">
           Real-time air quality from <strong style={{ color: 'var(--teal)' }}>Open-Meteo</strong>. Breath Load uses
           your activity's breathing rate × average PM2.5 along your walk. Activity is selected in the Walk screen.
         </p>
-        <div style={{
-          marginTop: 12, padding: '10px 14px', borderRadius: 12,
-          background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.14)',
-          fontSize: 11, color: 'var(--teal)', lineHeight: 1.5,
-        }}>
+        <div className="settings-note">
           Not a medical device. For informational use only.
         </div>
+      </div>
+
+      {/* Sign out */}
+      <div className="map-panel settings-card">
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="settings-signout scale-press"
+        >
+          <LogOut size={15} />
+          Sign out
+        </button>
       </div>
     </div>
   );

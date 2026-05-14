@@ -24,9 +24,9 @@ export default function BottomNav({ current, onChange, isWalking }: Props) {
       <nav
         className="bottom-nav"
         style={{
-          background: 'rgba(4, 15, 30, 0.88)',
-          border: '1px solid rgba(20, 184, 166, 0.18)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(20,184,166,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+          background: 'rgba(7,9,26,0.88)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.04)',
         }}
       >
         {TABS.map(({ id, label, Icon }) => {

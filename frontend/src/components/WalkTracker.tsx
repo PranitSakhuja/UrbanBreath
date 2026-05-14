@@ -135,8 +135,10 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
             <ActivityIcon id={activity.id} size={24} />
           </div>
           <div>
-            <h2>Walk</h2>
-            <p>{isWalking ? 'Live exposure tracking' : 'Choose pace and start clean-air tracking'}</p>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-1)', margin: 0, letterSpacing: '-0.02em' }}>Walk</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-3)', margin: 0 }}>
+              {isWalking ? 'Live exposure tracking' : 'Choose pace and start clean-air tracking'}
+            </p>
           </div>
         </div>
         {isWalking && (
@@ -149,7 +151,7 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
 
       {/* ── Activity selector ── */}
       <div className="walk-section">
-        <div className="walk-section__label">Activity</div>
+        <div className="walk-section__label" style={{ fontSize: 12, letterSpacing: '0.06em' }}>Activity</div>
         <div className="activity-grid">
           {ACTIVITIES.map(a => {
             const sel = activity.id === a.id;
@@ -159,10 +161,11 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
                 onClick={() => { if (!isWalking) setActivity(a); }}
                 disabled={isWalking}
                 className={`activity-chip scale-press ${sel ? 'activity-chip--active' : ''}`}
+                style={{ minHeight: 90 }}
               >
-                <ActivityIcon id={a.id} size={20} />
-                <span>{a.label}</span>
-                <small>{a.breathingRateLPerMin} L/min</small>
+                <ActivityIcon id={a.id} size={22} />
+                <span style={{ fontSize: 13 }}>{a.label}</span>
+                <small style={{ fontSize: 11 }}>{a.breathingRateLPerMin} L/min</small>
               </button>
             );
           })}
@@ -174,13 +177,13 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
           {/* ── Live overview ── */}
           <div className="walk-live-card" style={{ ['--quality' as string]: qualityColor }}>
             <div>
-              <div className="metric-label"><Timer size={14} /> Time</div>
-              <div className="walk-time mono">{formatElapsed(elapsedSec)}</div>
-              <div className="walk-subline">{status || 'Collecting first AQI sample'}</div>
+              <div className="metric-label" style={{ fontSize: 12, letterSpacing: '0.06em' }}><Timer size={14} /> Time</div>
+              <div className="walk-time mono" style={{ fontSize: 'clamp(48px, 13vw, 76px)' }}>{formatElapsed(elapsedSec)}</div>
+              <div className="walk-subline" style={{ fontSize: 13 }}>{status || 'Collecting first AQI sample'}</div>
             </div>
             <div className="walk-aqi-orb">
-              <span>Current AQI</span>
-              <strong className="mono">{cur ? Math.round(cur.aqi) : '...'}</strong>
+              <span style={{ fontSize: 12 }}>Current AQI</span>
+              <strong className="mono" style={{ fontSize: 46 }}>{cur ? Math.round(cur.aqi) : '...'}</strong>
               {cur && <AqiBadge aqi={cur.aqi} />}
             </div>
           </div>
@@ -195,8 +198,8 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
           {/* ── Breath Load (hero) ── */}
           <div className="walk-section walk-section--split">
             <div>
-              <div className="walk-section__label"><HeartPulse size={14} /> Breath load</div>
-              <p className="walk-copy">
+              <div className="walk-section__label" style={{ fontSize: 12, letterSpacing: '0.06em' }}><HeartPulse size={14} /> Breath load</div>
+              <p className="walk-copy" style={{ fontSize: 14 }}>
                 {activity.label} pace at {activity.breathingRateLPerMin} L/min. Worst AQI so far is <strong style={{ color: aqiColor(worstAqi) }}>{pts.length ? Math.round(worstAqi) : '...'}</strong>.
               </p>
             </div>
@@ -205,7 +208,7 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
 
           {/* ── AQI mini sparkline ── */}
           {pts.length > 2 && (
-            <div className="glass" style={{ padding: 16 }}>
+            <div className="glass" style={{ padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-2)', fontSize: 13, fontWeight: 500 }}>
                   <TrendingUp size={14} color="var(--teal)" /> AQI Over Walk
@@ -220,7 +223,7 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
           {status && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Activity size={12} color="var(--text-3)" />
-              <p style={{ fontSize: 12, color: 'var(--text-3)' }}>{status}</p>
+              <p style={{ fontSize: 13, color: 'var(--text-3)' }}>{status}</p>
             </div>
           )}
 
@@ -228,6 +231,7 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
           <button
             onClick={stopWalk}
             className="walk-action walk-action--stop scale-press"
+            style={{ fontSize: 18, minHeight: 62 }}
           >
             <Square size={18} fill="currentColor" /> Stop & See Summary
           </button>
@@ -240,20 +244,21 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
               <ActivityIcon id={activity.id} size={34} />
             </div>
             <div>
-              <p>{activity.label} mode</p>
-              <strong>{activity.breathingRateLPerMin} L/min</strong>
-              <span>GPS and AQI sampled every 8 seconds</span>
+              <p style={{ fontSize: 15 }}>{activity.label} mode</p>
+              <strong style={{ fontSize: 16 }}>{activity.breathingRateLPerMin} L/min</strong>
+              <span style={{ fontSize: 13 }}>GPS and AQI sampled every 8 seconds</span>
             </div>
           </div>
 
           <button
             onClick={startWalk}
             className="walk-action walk-action--start scale-press"
+            style={{ fontSize: 18, minHeight: 62 }}
           >
             <Play size={19} fill="currentColor" /> Start Walk
           </button>
 
-          <p className="walk-fineprint">
+          <p className="walk-fineprint" style={{ fontSize: 13 }}>
             Estimates based on modelled air-quality data & typical breathing rates.
             Not a medical device.
           </p>
@@ -268,12 +273,12 @@ export default function WalkTracker({ userLat, userLon, onSessionUpdate, onWalkE
 function PollutantStat({ label, value, unit, color }: { label: string; value: string; unit: string; color: string }) {
   return (
     <div style={{
-      background: 'rgba(4,15,30,0.55)', border: '1px solid rgba(255,255,255,0.05)',
+      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: 14, padding: '12px 14px', textAlign: 'center',
     }}>
-      <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-      <p className="mono" style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</p>
-      <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{unit}</p>
+      <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p className="mono" style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{value}</p>
+      <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>{unit}</p>
     </div>
   );
 }
@@ -281,10 +286,10 @@ function PollutantStat({ label, value, unit, color }: { label: string; value: st
 function MetricTile({ icon, label, value, unit, accent }: { icon: ReactNode; label: string; value: string; unit: string; accent: string }) {
   return (
     <div className="metric-tile" style={{ ['--accent' as string]: accent }}>
-      <div className="metric-label">{icon}{label}</div>
+      <div className="metric-label" style={{ fontSize: 12, letterSpacing: '0.06em' }}>{icon}{label}</div>
       <div>
-        <strong className="mono">{value}</strong>
-        <span>{unit}</span>
+        <strong className="mono" style={{ fontSize: 'clamp(22px, 6vw, 28px)' }}>{value}</strong>
+        <span style={{ fontSize: 12 }}>{unit}</span>
       </div>
     </div>
   );
@@ -306,7 +311,7 @@ function AqiBadge({ aqi }: { aqi: number }) {
   const color = aqiColor(aqi);
   return (
     <span style={{
-      display: 'inline-block', marginTop: 6, fontSize: 11, padding: '3px 10px', borderRadius: 20,
+      display: 'inline-block', marginTop: 6, fontSize: 12, padding: '4px 12px', borderRadius: 20,
       background: `${color}18`, border: `1px solid ${color}33`, color,
     }}>
       {label}

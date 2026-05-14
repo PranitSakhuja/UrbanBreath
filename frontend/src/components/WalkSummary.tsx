@@ -1,10 +1,14 @@
-import { ArrowLeft, Flame, Wind, Gauge, MapPin, Leaf } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Flame, Footprints, Gauge, Leaf, MapPin, Route, TrendingUp, Wind } from 'lucide-react';
 import type { WalkSession } from '../types';
 import { aqiColor, aqiGuidance } from '../lib/aqi';
 
-interface Props { session: WalkSession; onClose: () => void; }
+interface Props {
+  session: WalkSession;
+  history: WalkSession[];
+  onClose: () => void;
+}
 
-export default function WalkSummary({ session, onClose }: Props) {
+export default function WalkSummary({ session, history, onClose }: Props) {
   const bl = session.breathLoad;
   if (!bl) return null;
 
@@ -12,69 +16,109 @@ export default function WalkSummary({ session, onClose }: Props) {
   const dur = `${Math.floor(totalMin)}m ${Math.round((totalMin % 1) * 60)}s`;
   const aqi = Math.round(bl.avgAqi);
   const aColor = aqiColor(aqi);
+  const completedWalks = history.filter((walk) => walk.breathLoad);
+  const bestWalk = completedWalks.reduce<WalkSession | null>((best, walk) => {
+    if (!walk.breathLoad) return best;
+    if (!best?.breathLoad) return walk;
+    return walk.breathLoad.pm25InhaledUg < best.breathLoad.pm25InhaledUg ? walk : best;
+  }, null);
+  const totalDistance = completedWalks.reduce((sum, walk) => sum + (walk.breathLoad?.distanceKm ?? 0), 0);
+  const totalPm25 = completedWalks.reduce((sum, walk) => sum + (walk.breathLoad?.pm25InhaledUg ?? 0), 0);
 
   return (
-    <div className="fade-in" style={{ padding: '16px 16px 100px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="screen-shell fade-in">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>Walk Summary</h2>
-        <button onClick={onClose} style={{
-          display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-3)',
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-          padding: '6px 12px', borderRadius: 10, cursor: 'pointer',
-        }}>
+      <div className="screen-titlebar">
+        <div>
+          <h2>Walk Summary</h2>
+          <p>{completedWalks.length} saved walk{completedWalks.length === 1 ? '' : 's'} · detailed exposure analytics.</p>
+        </div>
+        <button onClick={onClose} className="floating-control scale-press" style={{ padding: '8px 14px', fontSize: 13 }}>
           <ArrowLeft size={13} /> Clear
         </button>
       </div>
 
       {/* Hero — PM2.5 Breath Load */}
-      <div className="glass-teal" style={{ padding: '24px 20px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div className="summary-hero glass-teal" style={{ ['--summary-accent' as string]: '#f97316' }}>
         <div style={{
           position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)',
           width: 200, height: 200, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#f97316', marginBottom: 8 }}>
+        <div className="panel-title summary-hero__label">
           <Flame size={16} />
-          <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Estimated PM2.5 Breath Load</span>
+          <span>Estimated PM2.5 Breath Load</span>
         </div>
-        <p className="mono" style={{ fontSize: 64, fontWeight: 700, color: '#f97316', lineHeight: 1 }}>
+        <p className="summary-hero__value mono">
           {bl.pm25InhaledUg.toFixed(2)}
         </p>
-        <p style={{ fontSize: 14, color: 'var(--text-3)', marginTop: 4 }}>micrograms of PM2.5 inhaled</p>
-        <p style={{ fontSize: 11, color: 'rgba(249,115,22,0.5)', marginTop: 6 }}>
+        <p className="summary-hero__sub">micrograms of PM2.5 inhaled</p>
+        <p className="summary-hero__meta">
           {bl.activity.icon} {bl.activity.label} · {bl.activity.breathingRateLPerMin} L/min
         </p>
       </div>
 
+      <div className="summary-kpi-strip">
+        <MiniKpi icon={<Route size={14} />} label="All walks" value={completedWalks.length.toString()} unit="saved" color="var(--teal-bright)" />
+        <MiniKpi icon={<Footprints size={14} />} label="Distance" value={totalDistance.toFixed(2)} unit="km total" color="#38bdf8" />
+        <MiniKpi icon={<Flame size={14} />} label="PM2.5" value={totalPm25.toFixed(2)} unit="ug total" color="#f97316" />
+        <MiniKpi icon={<Leaf size={14} />} label="Best" value={bestWalk?.breathLoad?.pm25InhaledUg.toFixed(2) ?? '...'} unit="ug lowest" color="#34d399" />
+      </div>
+
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div className="summary-stat-grid">
         {[
-          { label: 'Duration',    value: dur,                          color: 'var(--text-1)' },
+          { label: 'Duration',    value: dur,                              color: 'var(--text-1)' },
           { label: 'Distance',    value: `${bl.distanceKm.toFixed(2)} km`, color: 'var(--text-1)' },
-          { label: 'Avg AQI',     value: aqi.toString(),               color: aColor },
-          { label: 'Avg PM2.5',   value: `${bl.avgPm25.toFixed(1)}`,  color: '#f97316', unit: 'µg/m³' },
-          { label: 'Air Inhaled', value: `${bl.airInhaledM3.toFixed(3)}`, color: 'var(--text-2)', unit: 'm³' },
+          { label: 'Avg AQI',     value: aqi.toString(),                   color: aColor },
+          { label: 'Avg PM2.5',   value: `${bl.avgPm25.toFixed(1)}`,       color: '#f97316', unit: 'µg/m³' },
+          { label: 'Air Inhaled', value: `${bl.airInhaledM3.toFixed(3)}`,  color: 'var(--text-2)', unit: 'm³' },
           { label: 'Clean Bonus', value: `${bl.cleanSavingsPct.toFixed(0)}%`, color: '#34d399', note: 'vs worst zone' },
         ].map(({ label, value, color, unit, note }) => (
-          <div key={label} className="glass" style={{ padding: '12px 14px' }}>
-            <p style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-            <p className="mono" style={{ fontSize: 22, fontWeight: 700, color, lineHeight: 1 }}>
+          <div key={label} className="summary-stat map-panel">
+            <p>{label}</p>
+            <strong className="mono" style={{ color }}>
               {value}
-              {unit && <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 4 }}>{unit}</span>}
-            </p>
-            {note && <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>{note}</p>}
+              {unit && <span>{unit}</span>}
+            </strong>
+            {note && <em>{note}</em>}
           </div>
         ))}
       </div>
 
+      <div className="summary-graph-grid">
+        <div className="map-panel summary-chart-card">
+          <div className="summary-chart-card__head">
+            <div className="panel-title"><TrendingUp size={14} color="var(--teal)" /> AQI Route Trace</div>
+            <span>{session.points.length} reads</span>
+          </div>
+          <AqiRouteChart session={session} />
+        </div>
+
+        <div className="map-panel summary-chart-card">
+          <div className="summary-chart-card__head">
+            <div className="panel-title"><Wind size={14} color="var(--teal)" /> Exposure Mix</div>
+            <span>{dur}</span>
+          </div>
+          <ExposureBars session={session} />
+        </div>
+      </div>
+
+      <div className="map-panel summary-chart-card">
+        <div className="summary-chart-card__head">
+          <div className="panel-title"><CalendarDays size={14} color="var(--teal)" /> Previous Walks</div>
+          <span>Last {Math.min(completedWalks.length, 8)}</span>
+        </div>
+        <HistoryBars walks={completedWalks.slice(0, 8)} activeId={session.id} />
+      </div>
+
       {/* Insights */}
-      <div className="glass" style={{ padding: 16 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="map-panel summary-insights">
+        <h3>
           <Gauge size={14} color="var(--teal)" /> Health Insights
         </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="summary-insights__list">
           <Insight icon={<Wind size={13} />} text={<>Walked <strong style={{color:'var(--text-1)'}}>{bl.distanceKm.toFixed(2)} km</strong> in {dur}.</>} />
           <Insight icon={<Gauge size={13} />} text={<>Average AQI <strong style={{color:aColor}}>{aqi}</strong> — {aqi <= 50 ? 'Good' : aqi <= 100 ? 'Moderate' : aqi <= 150 ? 'Unhealthy for sensitive groups' : 'Unhealthy'}.</>} />
           <Insight icon={<Flame size={13} color="#f97316" />} text={<>PM2.5 Breath Load: <strong style={{color:'#f97316'}}>{bl.pm25InhaledUg.toFixed(2)} µg</strong> from {bl.airInhaledM3.toFixed(3)} m³ at {bl.avgPm25.toFixed(1)} µg/m³ avg.</>} />
@@ -88,25 +132,136 @@ export default function WalkSummary({ session, onClose }: Props) {
       </div>
 
       {/* Guidance banner */}
-      <div style={{
-        padding: '14px 16px', borderRadius: 16,
-        background: `${aColor}12`, border: `1px solid ${aColor}28`,
-      }}>
-        <p style={{ fontSize: 13, color: aColor, fontWeight: 500 }}>{aqiGuidance(aqi)}</p>
+      <div className="summary-guidance" style={{ background: `${aColor}12`, borderColor: `${aColor}28` }}>
+        <p style={{ color: aColor }}>{aqiGuidance(aqi)}</p>
       </div>
 
-      <p style={{ fontSize: 10, color: 'var(--text-3)', textAlign: 'center', padding: '0 16px', lineHeight: 1.6 }}>
+      <p className="screen-footnote">
         Estimates based on public/modelled air-quality data and typical breathing rates. Not a medical diagnosis.
       </p>
     </div>
   );
 }
 
+function MiniKpi({ icon, label, value, unit, color }: { icon: React.ReactNode; label: string; value: string; unit: string; color: string }) {
+  return (
+    <div className="summary-mini-kpi map-panel" style={{ ['--kpi-color' as string]: color }}>
+      <div>{icon}<span>{label}</span></div>
+      <strong className="mono">{value}</strong>
+      <em>{unit}</em>
+    </div>
+  );
+}
+
 function Insight({ icon, text }: { icon: React.ReactNode; text: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-      <div style={{ color: 'var(--text-3)', marginTop: 2, flexShrink: 0 }}>{icon}</div>
-      <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5, margin: 0 }}>{text}</p>
+    <div className="summary-insight">
+      <div>{icon}</div>
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function AqiRouteChart({ session }: { session: WalkSession }) {
+  const pts = session.points;
+  if (pts.length < 2) {
+    return <div className="summary-chart-empty">Not enough AQI samples for a route graph.</div>;
+  }
+
+  const W = 420;
+  const H = 130;
+  const pad = 12;
+  const aqis = pts.map((pt) => pt.aqi);
+  const min = Math.min(...aqis);
+  const max = Math.max(...aqis);
+  const range = max - min || 1;
+  const coords = pts.map((pt, i) => {
+    const x = pad + (i / (pts.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((pt.aqi - min) / range) * (H - pad * 2);
+    return { x, y, color: pt.color, aqi: pt.aqi };
+  });
+  const path = coords.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+  const area = `${path} L ${W - pad} ${H - pad} L ${pad} ${H - pad} Z`;
+  const last = coords[coords.length - 1];
+
+  return (
+    <div>
+      <svg className="summary-line-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="summary-aqi-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={last.color} stopOpacity="0.24" />
+            <stop offset="100%" stopColor={last.color} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {[0.25, 0.5, 0.75].map((t) => {
+          const y = pad + t * (H - pad * 2);
+          return <line key={t} x1={pad} x2={W - pad} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 5" />;
+        })}
+        <path d={area} fill="url(#summary-aqi-fill)" />
+        <path d={path} fill="none" stroke={last.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        {coords.map((pt, i) => (
+          <circle key={i} cx={pt.x} cy={pt.y} r={i === coords.length - 1 ? 4 : 2.4} fill={pt.color} opacity={i === coords.length - 1 ? 1 : 0.72} />
+        ))}
+      </svg>
+      <div className="summary-chart-meta">
+        <span>Low AQI {Math.round(min)}</span>
+        <span>High AQI {Math.round(max)}</span>
+      </div>
+    </div>
+  );
+}
+
+function ExposureBars({ session }: { session: WalkSession }) {
+  const bl = session.breathLoad;
+  if (!bl) return null;
+  const rows = [
+    { label: 'PM2.5 Load', value: bl.pm25InhaledUg, max: Math.max(bl.pm25InhaledUg, 1), color: '#f97316', text: `${bl.pm25InhaledUg.toFixed(2)} ug` },
+    { label: 'Avg AQI', value: bl.avgAqi, max: 300, color: aqiColor(bl.avgAqi), text: Math.round(bl.avgAqi).toString() },
+    { label: 'Clean Bonus', value: bl.cleanSavingsPct, max: 100, color: '#34d399', text: `${bl.cleanSavingsPct.toFixed(0)}%` },
+    { label: 'Air Inhaled', value: bl.airInhaledM3, max: Math.max(bl.airInhaledM3, 0.25), color: '#38bdf8', text: `${bl.airInhaledM3.toFixed(3)} m3` },
+  ];
+
+  return (
+    <div className="summary-bars">
+      {rows.map((row) => (
+        <div key={row.label} className="summary-bar-row">
+          <div>
+            <span>{row.label}</span>
+            <strong className="mono" style={{ color: row.color }}>{row.text}</strong>
+          </div>
+          <div className="summary-bar-track">
+            <i style={{ width: `${Math.min(100, (row.value / row.max) * 100)}%`, background: row.color, boxShadow: `0 0 10px ${row.color}88` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HistoryBars({ walks, activeId }: { walks: WalkSession[]; activeId: string }) {
+  if (walks.length === 0) return <div className="summary-chart-empty">Finish a walk to build your history.</div>;
+  const maxLoad = Math.max(...walks.map((walk) => walk.breathLoad?.pm25InhaledUg ?? 0), 1);
+
+  return (
+    <div className="history-list">
+      {walks.map((walk) => {
+        const bl = walk.breathLoad!;
+        const date = new Date(walk.endTime ?? walk.startTime).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const width = Math.max(6, (bl.pm25InhaledUg / maxLoad) * 100);
+        const color = aqiColor(bl.avgAqi);
+        return (
+          <div key={walk.id} className={`history-walk ${walk.id === activeId ? 'history-walk--active' : ''}`}>
+            <div>
+              <strong>{date}</strong>
+              <span>{bl.activity.label} · {bl.distanceKm.toFixed(2)} km · AQI {Math.round(bl.avgAqi)}</span>
+            </div>
+            <div className="history-walk__bar">
+              <i style={{ width: `${width}%`, background: color, boxShadow: `0 0 10px ${color}88` }} />
+            </div>
+            <em className="mono">{bl.pm25InhaledUg.toFixed(2)} ug</em>
+          </div>
+        );
+      })}
     </div>
   );
 }

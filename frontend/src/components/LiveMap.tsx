@@ -210,8 +210,8 @@ export default function LiveMap({ userLat, userLon, airQuality, walkPoints, aqiG
     <div className="relative w-full h-full">
       <MapContainer center={[userLat, userLon]} zoom={15} className="w-full h-full" zoomControl>
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
         <RecenterOnUser lat={userLat} lon={userLon} />
         <ViewportAqiSampler onGrid={onAqiGridChange} />
@@ -236,10 +236,10 @@ export default function LiveMap({ userLat, userLon, airQuality, walkPoints, aqiG
         {/* User dot */}
         <CircleMarker
           center={[userLat, userLon]} radius={7}
-          pathOptions={{ color: '#fff', fillColor: '#14b8a6', fillOpacity: 1, weight: 2.5 }}
+          pathOptions={{ color: '#fff', fillColor: '#0d9488', fillOpacity: 1, weight: 2.5 }}
         >
           <Popup>
-            <div style={{ fontSize: 12, fontFamily: 'Inter, sans-serif', color: '#e2e8f0', background: '#071628', padding: '6px 10px', borderRadius: 8 }}>
+            <div style={{ fontSize: 12, fontFamily: 'Inter, sans-serif', color: '#0f172a', background: '#ffffff', padding: '6px 10px', borderRadius: 8 }}>
               <strong>You</strong><br />
               AQI {Math.round(aqi)} · {airQuality?.qualityLabel ?? '—'}
             </div>

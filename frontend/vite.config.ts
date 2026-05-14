@@ -14,6 +14,7 @@ export default defineConfig({
           cert: fs.readFileSync('certs/dev-cert.pem'),
         }
       : undefined,
+    port: 8443,
     proxy: {
       '/api': 'http://localhost:8001',
     },
