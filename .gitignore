@@ -26,3 +26,7 @@ backend/.env
 # Python
 *.pyc
 .pytest_cache/
+
+# Remotion promo
+urbanbreath-promo/node_modules/
+urbanbreath-promo/out/
